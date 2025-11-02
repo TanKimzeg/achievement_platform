@@ -441,20 +441,23 @@ onMounted(() => {
 <style lang="scss" scoped>
 .admin-dashboard {
   .welcome-card {
-    background: white;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
     padding: 30px;
     border-radius: 8px;
     margin-bottom: 20px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 16px var(--shadow-light);
+    transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
     
     h2 {
       margin: 0 0 10px 0;
-      color: #303133;
+      color: var(--text-primary);
     }
     
     p {
       margin: 0;
-      color: #606266;
+      color: var(--text-secondary);
     }
   }
   
@@ -521,6 +524,9 @@ onMounted(() => {
     .chart-container {
       height: 300px;
       width: 100%;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
     }
   }
   
@@ -538,16 +544,17 @@ onMounted(() => {
     .empty-state {
       text-align: center;
       padding: 40px 20px;
-      color: #909399;
+      color: var(--text-secondary);
       
       .el-icon {
         margin-bottom: 16px;
-        color: #c0c4cc;
+        color: var(--text-tertiary);
       }
       
       p {
         margin: 0;
         font-size: 14px;
+        color: var(--text-secondary);
       }
     }
     
@@ -557,7 +564,7 @@ onMounted(() => {
         align-items: center;
         justify-content: space-between;
         padding: 12px 0;
-        border-bottom: 1px solid #f0f0f0;
+        border-bottom: 1px solid var(--border-color);
         
         &:last-child {
           border-bottom: none;
@@ -568,7 +575,7 @@ onMounted(() => {
           
           .item-title {
             font-weight: 500;
-            color: #303133;
+            color: var(--text-primary);
             margin-bottom: 4px;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -582,7 +589,7 @@ onMounted(() => {
             
             .item-time {
               font-size: 12px;
-              color: #909399;
+              color: var(--text-secondary);
             }
           }
         }

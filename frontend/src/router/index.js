@@ -6,7 +6,12 @@ import NProgress from 'nprogress'
 const routes = [
   {
     path: '/',
-    redirect: '/login'
+    name: 'Home',
+    component: () => import('@/views/Home.vue'),
+    meta: { 
+      title: '首页',
+      requiresAuth: false 
+    }
   },
   {
     path: '/login',
@@ -14,6 +19,15 @@ const routes = [
     component: () => import('@/views/Login.vue'),
     meta: { 
       title: '登录',
+      requiresAuth: false 
+    }
+  },
+  {
+    path: '/display',
+    name: 'Display',
+    component: () => import('@/views/Display.vue'),
+    meta: { 
+      title: '成果展示',
       requiresAuth: false 
     }
   },

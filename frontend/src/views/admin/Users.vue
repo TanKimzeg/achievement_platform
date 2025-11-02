@@ -502,8 +502,10 @@ onMounted(() => {
   .filter-section {
     margin-bottom: 20px;
     padding: 20px;
-    background: #f8f9fa;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
     border-radius: 6px;
+    color: var(--text-primary);
   }
   
   .pagination-wrapper {

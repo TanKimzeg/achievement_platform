@@ -417,20 +417,21 @@ onMounted(() => {
 <style lang="scss" scoped>
 .leader-dashboard {
   .welcome-card {
-    background: white;
+    background: var(--bg-primary);
     padding: 30px;
     border-radius: 8px;
     margin-bottom: 20px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 2px 4px var(--shadow-light);
     
     h2 {
       margin: 0 0 10px 0;
-      color: #303133;
+      color: var(--text-primary);
     }
     
     p {
       margin: 0;
-      color: #606266;
+      color: var(--text-secondary);
     }
   }
   

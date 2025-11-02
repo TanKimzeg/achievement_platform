@@ -5,14 +5,21 @@
 </template>
 
 <script setup>
-import { watch } from 'vue'
+import { watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useConfigStore } from '@/stores/config'
 import { useUserStore } from '@/stores/user'
+import { useThemeStore } from '@/stores/theme'
 
 const route = useRoute()
 const configStore = useConfigStore()
 const userStore = useUserStore()
+const themeStore = useThemeStore()
+
+// 初始化主题系统
+onMounted(() => {
+  themeStore.init()
+})
 
 // 监听路由变化，智能刷新配置
 watch(() => route.path, async () => {
@@ -28,6 +35,8 @@ watch(() => route.path, async () => {
 </script>
 
 <style lang="scss">
+@import '@/styles/theme.scss';
+
 #app {
   font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -35,6 +44,9 @@ watch(() => route.path, async () => {
   height: 100vh;
   margin: 0;
   padding: 0;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 * {
@@ -44,6 +56,7 @@ watch(() => route.path, async () => {
 body {
   margin: 0;
   padding: 0;
-  background-color: #f5f5f5;
+  background-color: var(--bg-secondary);
+  transition: background-color 0.3s ease;
 }
 </style>

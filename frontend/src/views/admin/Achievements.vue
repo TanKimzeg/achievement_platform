@@ -15,6 +15,29 @@
 
 <style lang="scss" scoped>
 .achievements-page {
-  // 样式待完善
+  // 深色模式适配，避免局部容器显白
+  :deep(.el-card) {
+    background-color: var(--bg-primary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+  }
+
+  :deep(.filter-section) {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--text-primary);
+    padding: 16px;
+  }
+
+  :deep(.table-container) {
+    background-color: var(--bg-primary);
+    border-radius: 8px;
+  }
+
+  :deep(.el-table) {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+  }
 }
 </style>

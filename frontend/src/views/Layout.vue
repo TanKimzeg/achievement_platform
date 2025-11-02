@@ -1,5 +1,8 @@
 <template>
-  <div class="layout-container">
+  <div class="layout-container" :class="{ 'dark-mode': isDarkMode }">
+    <!-- 主题切换按钮 -->
+    <ThemeToggle />
+    
     <el-container>
       <!-- 顶部导航 -->
       <el-header class="layout-header">
@@ -99,6 +102,9 @@
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useUserStore } from '@/stores/user'
+import { useThemeStore } from '@/stores/theme'
+import { storeToRefs } from 'pinia'
+import ThemeToggle from '@/components/ThemeToggle.vue'
 import { 
   User, 
   ArrowDown, 
@@ -112,6 +118,8 @@ import {
 
 const router = useRouter()
 const userStore = useUserStore()
+const themeStore = useThemeStore()
+const { isDarkMode } = storeToRefs(themeStore)
 
 const handleCommand = async (command) => {
   switch (command) {
@@ -140,19 +148,28 @@ const handleCommand = async (command) => {
 <style lang="scss" scoped>
 .layout-container {
   height: 100vh;
+  background-color: var(--bg-secondary);
+  transition: background-color 0.3s ease;
+  overflow: hidden;
 }
 
 .layout-header {
-  background: #fff;
-  border-bottom: 1px solid #e4e7ed;
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--border-color);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 20px;
+  transition: all 0.3s ease;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
   
   .header-left h2 {
     margin: 0;
-    color: #303133;
+    color: var(--text-primary);
     font-size: 18px;
     font-weight: 500;
   }
@@ -162,10 +179,11 @@ const handleCommand = async (command) => {
       display: flex;
       align-items: center;
       cursor: pointer;
-      color: #606266;
+      color: var(--text-secondary);
+      transition: color 0.3s ease;
       
       &:hover {
-        color: #409eff;
+        color: var(--primary-color);
       }
       
       .el-icon {
@@ -176,17 +194,504 @@ const handleCommand = async (command) => {
 }
 
 .layout-aside {
-  background: #fff;
-  border-right: 1px solid #e4e7ed;
+  background: var(--bg-primary);
+  border-right: 1px solid var(--border-color);
+  transition: all 0.3s ease;
+  position: fixed;
+  top: 60px;
+  left: 0;
+  bottom: 0;
+  z-index: 99;
+  overflow-y: auto;
   
   .sidebar-menu {
     border-right: none;
     height: 100%;
+    background: var(--bg-primary);
   }
 }
 
 .layout-main {
-  background: #f5f5f5;
+  background: var(--bg-secondary);
   padding: 20px;
+  transition: background-color 0.3s ease;
+  margin-left: 200px;
+  margin-top: 60px;
+  height: calc(100vh - 60px);
+  overflow-y: auto;
+}
+
+// 暗色主题下的特殊样式
+.dark-mode {
+  :deep(.el-container) {
+    background-color: var(--bg-secondary);
+  }
+  
+  :deep(.el-menu) {
+    background-color: var(--bg-primary);
+    
+    .el-menu-item {
+      color: var(--text-secondary);
+      
+      &:hover {
+        background-color: var(--bg-tertiary);
+        color: var(--primary-color);
+      }
+      
+      &.is-active {
+        background-color: var(--primary-light);
+        color: var(--primary-color);
+      }
+    }
+  }
+  
+  :deep(.el-dropdown-menu) {
+    background-color: var(--bg-primary);
+    border-color: var(--border-color);
+    
+    .el-dropdown-menu__item {
+      color: var(--text-primary);
+      
+      &:hover {
+        background-color: var(--bg-tertiary);
+        color: var(--primary-color);
+      }
+    }
+  }
+
+  // 输入计数（例如 0 / 200）在暗色模式下的颜色
+  :deep(.el-input__count),
+  :deep(.el-input__count-inner) {
+    color: var(--text-secondary);
+    background: transparent;
+  }
+  
+  // 修复各种组件的夜间模式样式
+  :deep(.el-card) {
+    background-color: var(--bg-primary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+    
+    .el-card__header {
+      background-color: var(--bg-primary);
+      border-bottom-color: var(--border-color);
+      color: var(--text-primary);
+    }
+    
+    .el-card__body {
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+    }
+  }
+  
+  :deep(.el-table) {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    
+    .el-table__header {
+      background-color: var(--bg-secondary) !important;
+      color: var(--text-primary) !important;
+      
+      th {
+        background-color: var(--bg-secondary) !important;
+        color: var(--text-primary) !important;
+        border-bottom-color: var(--border-color) !important;
+      }
+      
+      .el-table__cell {
+        background-color: var(--bg-secondary) !important;
+        color: var(--text-primary) !important;
+        
+        .cell {
+          color: var(--text-primary) !important;
+        }
+      }
+    }
+    
+    // 额外的表头样式覆盖
+    thead {
+      background-color: var(--bg-secondary) !important;
+      
+      th {
+        background-color: var(--bg-secondary) !important;
+        color: var(--text-primary) !important;
+        
+        .cell {
+          color: var(--text-primary) !important;
+        }
+      }
+    }
+    
+    .el-table__body {
+      background-color: var(--bg-primary);
+      
+      tr {
+        background-color: var(--bg-primary);
+        
+        // 条纹效果 - 偶数行
+        &.el-table__row--striped {
+          background-color: var(--bg-secondary);
+          
+          td {
+            background-color: var(--bg-secondary);
+          }
+        }
+        
+        // 悬停效果
+        &:hover {
+          background-color: var(--bg-tertiary) !important;
+          
+          td {
+            background-color: var(--bg-tertiary) !important;
+          }
+        }
+        
+        td {
+          border-bottom-color: var(--border-color);
+          color: var(--text-primary);
+          background-color: inherit;
+        }
+      }
+    }
+    
+    // 确保条纹表格的样式正确
+    &.el-table--striped {
+      .el-table__body {
+        tr.el-table__row--striped {
+          background-color: var(--bg-secondary);
+          
+          td {
+            background-color: var(--bg-secondary);
+          }
+          
+          &:hover {
+            background-color: var(--bg-tertiary) !important;
+            
+            td {
+              background-color: var(--bg-tertiary) !important;
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  :deep(.el-input) {
+    .el-input__wrapper {
+      background-color: var(--bg-primary);
+      border-color: var(--border-color);
+      color: var(--text-primary);
+      
+      &:hover {
+        border-color: var(--primary-color);
+      }
+      
+      &.is-focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 1px var(--primary-color);
+      }
+    }
+    
+    .el-input__inner {
+      color: var(--text-primary);
+      
+      &::placeholder {
+        color: var(--text-tertiary);
+      }
+    }
+  }
+  
+  :deep(.el-textarea) {
+    .el-textarea__inner {
+      background-color: var(--bg-primary);
+      border-color: var(--border-color);
+      color: var(--text-primary);
+      
+      &:hover {
+        border-color: var(--primary-color);
+      }
+      
+      &:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 1px var(--primary-color);
+      }
+      
+      &::placeholder {
+        color: var(--text-tertiary);
+      }
+    }
+  }
+  
+  :deep(.el-select) {
+    .el-select__wrapper {
+      background-color: var(--bg-primary);
+      border-color: var(--border-color);
+      color: var(--text-primary);
+      
+      &:hover {
+        border-color: var(--primary-color);
+      }
+      
+      &.is-focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 1px var(--primary-color);
+      }
+    }
+
+    .el-select__placeholder {
+      color: var(--text-tertiary);
+    }
+
+    .el-select__selection {
+      color: var(--text-primary);
+    }
+  }
+  
+  :deep(.el-button--default) {
+    background-color: var(--bg-primary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+    
+    &:hover {
+      border-color: var(--primary-color);
+      color: var(--primary-color);
+    }
+  }
+  
+  :deep(.el-button--primary) {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    
+    &:hover {
+      background-color: var(--primary-hover);
+      border-color: var(--primary-hover);
+    }
+  }
+  
+  :deep(.el-form-item__label) {
+    color: var(--text-primary);
+  }
+  
+  :deep(.el-upload) {
+    .el-upload-dragger {
+      background-color: var(--bg-secondary);
+      border-color: var(--border-color);
+      color: var(--text-secondary);
+      
+      &:hover {
+        border-color: var(--primary-color);
+      }
+    }
+  }
+  
+  :deep(.el-pagination) {
+    .el-pagination__total,
+    .el-pagination__goto,
+    .el-pagination__classifier {
+      color: var(--text-primary);
+    }
+    
+    .btn-prev,
+    .btn-next {
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      
+      &:hover {
+        color: var(--primary-color);
+      }
+    }
+    
+    .el-pager li {
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      
+      &:hover {
+        color: var(--primary-color);
+      }
+      
+      &.is-active {
+        background-color: var(--primary-color);
+        color: white;
+      }
+    }
+  }
+  
+  :deep(.el-tag--success) {
+    background-color: rgba(16, 185, 129, 0.1);
+    border-color: rgba(16, 185, 129, 0.2);
+    color: #10b981;
+  }
+  
+  :deep(.el-tag--danger) {
+    background-color: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+  }
+  
+  :deep(.el-tag--warning) {
+    background-color: rgba(245, 158, 11, 0.1);
+    border-color: rgba(245, 158, 11, 0.2);
+    color: #f59e0b;
+  }
+  
+  :deep(.el-tag--info) {
+    background-color: rgba(6, 182, 212, 0.1);
+    border-color: rgba(6, 182, 212, 0.2);
+    color: #06b6d4;
+  }
+
+  // info 按钮（返回等），plain 变体与普通变体在暗色模式下的样式
+  :deep(.el-button--info) {
+    background-color: var(--info-color);
+    border-color: var(--info-color);
+    color: #fff;
+
+    &:hover {
+      filter: brightness(1.1);
+    }
+  }
+
+  :deep(.el-button--info.is-plain) {
+    background-color: var(--bg-primary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+
+    &:hover {
+      border-color: var(--primary-color);
+      color: var(--primary-color);
+      background-color: var(--bg-tertiary);
+    }
+  }
+
+  // 兜底：无修饰类的按钮在暗色模式下不显白
+  :deep(.el-button) {
+    background-color: var(--bg-primary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+
+    &:hover {
+      border-color: var(--primary-color);
+      color: var(--primary-color);
+    }
+  }
+
+  // 页面内的筛选区容器在暗色模式下不显白
+  :deep(.filter-section) {
+    background-color: var(--bg-secondary) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 6px !important;
+    color: var(--text-primary) !important;
+    padding: 16px !important;
+    
+    // 筛选区内的所有输入组件
+    .el-input__wrapper {
+      background-color: var(--bg-primary) !important;
+      border-color: var(--border-color) !important;
+      color: var(--text-primary) !important;
+      
+      &:hover {
+        border-color: var(--primary-color) !important;
+      }
+      
+      &.is-focus {
+        border-color: var(--primary-color) !important;
+        box-shadow: 0 0 0 1px var(--primary-color) !important;
+      }
+    }
+    
+    .el-input__inner {
+      color: var(--text-primary) !important;
+      background-color: transparent !important;
+      
+      &::placeholder {
+        color: var(--text-tertiary) !important;
+      }
+    }
+    
+    // 选择器组件
+    .el-select__wrapper {
+      background-color: var(--bg-primary) !important;
+      border-color: var(--border-color) !important;
+      color: var(--text-primary) !important;
+      
+      &:hover {
+        border-color: var(--primary-color) !important;
+      }
+      
+      &.is-focus {
+        border-color: var(--primary-color) !important;
+        box-shadow: 0 0 0 1px var(--primary-color) !important;
+      }
+    }
+    
+    .el-select__placeholder {
+      color: var(--text-tertiary) !important;
+    }
+    
+    .el-select__selection {
+      color: var(--text-primary) !important;
+    }
+    
+    // 日期选择器
+    .el-range-editor {
+      background-color: var(--bg-primary) !important;
+      border-color: var(--border-color) !important;
+      
+      &:hover {
+        border-color: var(--primary-color) !important;
+      }
+      
+      &.is-focus {
+        border-color: var(--primary-color) !important;
+        box-shadow: 0 0 0 1px var(--primary-color) !important;
+      }
+    }
+    
+    .el-range-input {
+      color: var(--text-primary) !important;
+      background-color: transparent !important;
+      
+      &::placeholder {
+        color: var(--text-tertiary) !important;
+      }
+    }
+    
+    .el-range-separator {
+      color: var(--text-secondary) !important;
+    }
+    
+    // 按钮
+    .el-button {
+      background-color: var(--bg-primary) !important;
+      border-color: var(--border-color) !important;
+      color: var(--text-primary) !important;
+      
+      &:hover {
+        border-color: var(--primary-color) !important;
+        color: var(--primary-color) !important;
+      }
+    }
+    
+    // 图标
+    .el-icon {
+      color: var(--text-secondary) !important;
+    }
+  }
+}
+
+// 响应式设计
+@media (max-width: 768px) {
+  .layout-aside {
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    
+    &.mobile-open {
+      transform: translateX(0);
+    }
+  }
+  
+  .layout-main {
+    margin-left: 0;
+  }
 }
 </style>

@@ -1,50 +1,44 @@
 <template>
-  <div class="login-container">
-    <div class="login-form">
+  <div class="login-container" :class="{ 'dark-mode': isDarkMode }">
+    <!-- 夜间模式切换按钮 -->
+    <ThemeToggle />
+
+    <div class="form-control" :class="{ 'dark': isDarkMode }">
       <div class="login-header">
-        <h2>中国人民公安大学</h2>
-        <h3>学生成果登记与管理系统</h3>
+        <h2 class="title">中国人民公安大学</h2>
+        <h3 class="subtitle">学生成果登记与管理系统</h3>
       </div>
       
-      <el-form
-        ref="loginFormRef"
-        :model="loginForm"
-        :rules="loginRules"
-        class="login-form-content"
-        @keyup.enter="handleLogin"
+      <div class="input-field">
+         <input 
+           v-model="loginForm.username"
+           required 
+           class="input" 
+           type="text"
+           @blur="validateField('username')"
+         />
+         <label class="label">请输入学号/工号</label>
+       </div>
+       
+       <div class="input-field">
+         <input 
+           v-model="loginForm.password"
+           required 
+           class="input" 
+           type="password"
+           @blur="validateField('password')"
+           @keyup.enter="handleLogin"
+         />
+         <label class="label">请输入密码</label>
+       </div>
+      
+      <button 
+        class="submit-btn" 
+        :disabled="loading"
+        @click="handleLogin"
       >
-        <el-form-item prop="username">
-          <el-input
-            v-model="loginForm.username"
-            placeholder="请输入学号/工号"
-            size="large"
-            prefix-icon="User"
-          />
-        </el-form-item>
-        
-        <el-form-item prop="password">
-          <el-input
-            v-model="loginForm.password"
-            type="password"
-            placeholder="请输入密码"
-            size="large"
-            prefix-icon="Lock"
-            show-password
-          />
-        </el-form-item>
-        
-        <el-form-item>
-          <el-button
-            type="primary"
-            size="large"
-            :loading="loading"
-            @click="handleLogin"
-            class="login-button"
-          >
-            {{ loading ? '登录中...' : '登录' }}
-          </el-button>
-        </el-form-item>
-      </el-form>
+        {{ loading ? '登录中...' : '登录' }}
+      </button>
       
       <div class="login-footer">
         <p>请使用学号/工号和密码登录系统</p>
@@ -58,11 +52,16 @@ import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores/user'
+import { useThemeStore } from '@/stores/theme'
+import { storeToRefs } from 'pinia'
+import ThemeToggle from '@/components/ThemeToggle.vue'
 
 const router = useRouter()
 const userStore = useUserStore()
+const themeStore = useThemeStore()
 
-const loginFormRef = ref()
+const { isDarkMode } = storeToRefs(themeStore)
+
 const loading = ref(false)
 
 const loginForm = reactive({
@@ -70,120 +69,289 @@ const loginForm = reactive({
   password: ''
 })
 
-const loginRules = {
-  username: [
-    { required: true, message: '请输入学号/工号', trigger: 'blur' }
-  ],
-  password: [
-    { required: true, message: '请输入密码', trigger: 'blur' },
-    { min: 6, message: '密码长度不能少于6位', trigger: 'blur' }
-  ]
+const errors = reactive({
+  username: '',
+  password: ''
+})
+
+// 表单验证
+const validateField = (field) => {
+  errors[field] = ''
+  
+  if (field === 'username') {
+    if (!loginForm.username.trim()) {
+      errors.username = '请输入学号/工号'
+    }
+  }
+  
+  if (field === 'password') {
+    if (!loginForm.password) {
+      errors.password = '请输入密码'
+    } else if (loginForm.password.length < 6) {
+      errors.password = '密码长度不能少于6位'
+    }
+  }
+}
+
+// 验证整个表单
+const validateForm = () => {
+  validateField('username')
+  validateField('password')
+  
+  return !errors.username && !errors.password && loginForm.username && loginForm.password
 }
 
 const handleLogin = async () => {
-  if (!loginFormRef.value) return
+  if (!validateForm()) {
+    ElMessage.error('请填写完整的登录信息')
+    return
+  }
   
-  await loginFormRef.value.validate(async (valid) => {
-    if (valid) {
-      loading.value = true
+  loading.value = true
+  
+  try {
+    const result = await userStore.login(loginForm)
+    
+    if (result.success) {
+      ElMessage.success('登录成功')
       
-      try {
-        const result = await userStore.login(loginForm)
-        
-        if (result.success) {
-          ElMessage.success('登录成功')
-          
-          // 根据用户角色跳转到对应页面
-          const roleRoutes = {
-            'student': '/student',
-            'team_leader': '/leader',
-            'admin': '/admin'
-          }
-          
-          router.push(roleRoutes[result.user.role] || '/dashboard')
-        } else {
-          ElMessage.error(result.message)
-        }
-      } catch (error) {
-        ElMessage.error('登录失败，请稍后重试')
-      } finally {
-        loading.value = false
+      // 根据用户角色跳转到对应页面
+      const roleRoutes = {
+        'student': '/student',
+        'team_leader': '/leader',
+        'admin': '/admin'
       }
+      
+      router.push(roleRoutes[result.user.role] || '/dashboard')
+    } else {
+      ElMessage.error(result.message)
     }
-  })
+  } catch (error) {
+    ElMessage.error('登录失败，请稍后重试')
+  } finally {
+    loading.value = false
+  }
 }
 </script>
 
 <style lang="scss" scoped>
 .login-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: url('~@/assets/back.jpg') center center/cover no-repeat;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 20px;
+  position: relative;
+  transition: all 0.3s ease;
+  
+  &.dark-mode {
+    filter: brightness(0.4);
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      pointer-events: none;
+    }
+  }
 }
 
-.login-form {
-  width: 100%;
-  max-width: 400px;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
+
+
+.form-control {
+  margin: 20px;
+  background-color: #ffffff;
+  box-shadow: 0 15px 25px rgba(0, 0, 0, 0.6);
+  width: 400px;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  gap: 10px;
+  padding: 25px;
+  border-radius: 16px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  position: relative;
+  z-index: 10;
+  transition: all 0.3s ease;
+  
+  &.dark {
+    background-color: rgba(30, 30, 30, 0.95);
+    color: #ffffff;
+    box-shadow: 0 15px 25px rgba(0, 0, 0, 0.8);
+  }
 }
 
 .login-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
   text-align: center;
-  padding: 30px 20px;
+  margin-bottom: 20px;
   
-  h2 {
+  .title {
     font-size: 24px;
+    font-weight: 700;
     margin-bottom: 8px;
-    font-weight: 600;
+    color: #333;
+    text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.3);
+    
+    .form-control.dark & {
+      color: #ffffff;
+      text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.8);
+    }
   }
   
-  h3 {
+  .subtitle {
     font-size: 16px;
-    font-weight: 400;
-    opacity: 0.9;
+    font-weight: 500;
+    color: #666;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+    
+    .form-control.dark & {
+      color: #cccccc;
+      text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+    }
   }
 }
 
-.login-form-content {
-  padding: 40px 30px 30px;
-  
-  .el-form-item {
-    margin-bottom: 24px;
-  }
-}
-
-.login-button {
+.input-field {
+  position: relative;
   width: 100%;
-  height: 44px;
+  margin-bottom: 20px;
+}
+
+.input {
+  margin-top: 15px;
+  width: 100%;
+  outline: none;
+  border-radius: 8px;
+  height: 45px;
+  border: 1.5px solid #ecedec;
+  background: transparent;
+  padding-left: 10px;
   font-size: 16px;
-  font-weight: 500;
+  transition: all 0.3s ease;
+  
+  .form-control.dark & {
+    border-color: #555;
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    
+    &::placeholder {
+      color: #aaa;
+    }
+  }
+  
+  &:focus {
+    border: 1.5px solid #2d79f3;
+    
+    .form-control.dark & {
+      border-color: #4a9eff;
+    }
+  }
+}
+
+.input-field .label {
+  position: absolute;
+  top: 25px;
+  left: 15px;
+  color: #ccc;
+  transition: all 0.3s ease;
+  pointer-events: none;
+  z-index: 2;
+  background: transparent;
+  
+  .form-control.dark & {
+    color: #aaa;
+  }
+}
+
+.input-field .input:focus ~ .label,
+.input-field .input:valid ~ .label {
+  top: 5px;
+  left: 5px;
+  font-size: 12px;
+  color: #2d79f3;
+  background-color: #ffffff;
+  padding-left: 5px;
+  padding-right: 5px;
+  
+  .form-control.dark & {
+    color: #4a9eff;
+    background-color: rgba(30, 30, 30, 0.95);
+  }
+}
+
+
+
+.submit-btn {
+  margin-top: 30px;
+  height: 55px;
+  border-radius: 11px;
+  border: 0;
+  outline: none;
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 700;
+  background: linear-gradient(180deg, #4a9eff 0%, #2d79f3 50%, #1e5bb8 100%);
+  box-shadow: 0px 0px 0px 0px #4a9eff, 0px 0px 0px 0px rgba(74, 158, 255, 0.3);
+  transition: all 0.3s cubic-bezier(0.15, 0.83, 0.66, 1);
+  cursor: pointer;
+  
+  &:hover:not(:disabled) {
+    box-shadow: 0px 0px 0px 2px #4a9eff, 0px 0px 0px 4px rgba(74, 158, 255, 0.3);
+    transform: translateY(-2px);
+  }
+  
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+  
+  .form-control.dark & {
+    background: linear-gradient(180deg, #5ba3ff 0%, #3d85f5 50%, #2668c7 100%);
+    
+    &:hover:not(:disabled) {
+      box-shadow: 0px 0px 0px 2px #5ba3ff, 0px 0px 0px 4px rgba(91, 163, 255, 0.3);
+    }
+  }
 }
 
 .login-footer {
   text-align: center;
-  padding: 0 30px 30px;
-  color: #666;
-  font-size: 14px;
+  margin-top: 20px;
+  
+  p {
+    color: #666;
+    font-size: 14px;
+    margin: 0;
+    
+    .form-control.dark & {
+      color: #aaa;
+    }
+  }
 }
 
-:deep(.el-input__wrapper) {
-  border-radius: 6px;
-  box-shadow: 0 0 0 1px #dcdfe6 inset;
-}
-
-:deep(.el-input__wrapper:hover) {
-  box-shadow: 0 0 0 1px #c0c4cc inset;
-}
-
-:deep(.el-input__wrapper.is-focus) {
-  box-shadow: 0 0 0 1px #409eff inset;
+@media (max-width: 768px) {
+  .form-control {
+    width: 90%;
+    max-width: 350px;
+    padding: 20px;
+  }
+  
+  .mode-toggle {
+    top: 15px;
+    right: 15px;
+    
+    .toggle-btn {
+      width: 40px;
+      height: 40px;
+      font-size: 16px;
+    }
+  }
 }
 </style>
